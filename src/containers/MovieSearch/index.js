@@ -1,4 +1,6 @@
 import axios from 'axios'
+
+import { useState } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { SearchIcon } from '@heroicons/react/outline'
 import { StarIcon as StarSolid } from '@heroicons/react/solid'
@@ -10,10 +12,18 @@ import {
 import Loading from '../../components/Loading'
 
 function MovieSearch() {
-  const { data, isLoading, isError, error } = useQuery('movies', () =>
-    axios.get(
-      `https://api.themoviedb.org/3/search/movie?api_key=${process.env.REACT_APP_TMDB_API_KEY}&query=martian&language=en-US&page=1&include_adult=false`,
-    ),
+  const queryClient = useQueryClient()
+
+  const [inputValue, setInputValue] = useState('')
+  const { data, isLoading, isError, error, refetch } = useQuery(
+    ['movies', inputValue],
+    () =>
+      axios.get(
+        `https://api.themoviedb.org/3/search/movie?api_key=${process.env.REACT_APP_TMDB_API_KEY}&query=${inputValue}&language=en-US&page=1&include_adult=false`,
+      ),
+    {
+      enabled: false,
+    },
   )
 
   if (isLoading) {
@@ -27,7 +37,12 @@ function MovieSearch() {
   return (
     <main className='flex-1 justify-between sm:flex-col my-4 px-4 sm:px-6 lg:max-w-6xl lg:mx-auto lg:px-8'>
       <div className='flex-1 flex border-b border-gray-300'>
-        <form className='w-full flex md:ml-0' action='#' method='GET'>
+        <form
+          className='w-full flex md:ml-0'
+          onSubmit={e => {
+            e.preventDefault()
+            refetch()
+          }}>
           <label htmlFor='search-field' className='sr-only'>
             Search
           </label>
@@ -42,6 +57,10 @@ function MovieSearch() {
               name='search-field'
               className='block w-full h-full pl-8 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent sm:text-sm'
               placeholder='Search Movies'
+              value={inputValue}
+              onChange={e => {
+                setInputValue(e.target.value)
+              }}
               type='search'
             />
           </div>
